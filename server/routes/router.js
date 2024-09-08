@@ -1,6 +1,7 @@
 const express = require("express");
 const router = new express.Router();
 const userModel = require("../models/userSchema");
+const authenticate = require("../middleware/authenticate");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const secretkey = "88950236997612403019742353623963";
@@ -68,21 +69,20 @@ router.post("/login", async (req, res) => {
           const token = jwt.sign({ _id: user._id }, secretkey);
           user.tokens = user.tokens.concat({ token: token });
           await user.save();
-            console.log(token);
+          // console.log(token);
 
-          // cookiegenerate
-          res.cookie("usercookie",token,{
-            expires:new Date(Date.now()+9000000),
-            httpOnly:true
-        });
-
-
+          
           const result = {
             user,
             token,
           };
 
           res.status(201).json({ status: 201, result });
+          // cookiegenerate
+          res.cookie("usercookie", token, {
+            expires: new Date(Date.now() + 9000000),
+            httpOnly: true,
+          });
         } catch (error) {
           res.status(422).json(error);
         }
@@ -93,4 +93,32 @@ router.post("/login", async (req, res) => {
   }
 });
 
+router.get("/validuser", authenticate, async (req, res) => {
+  try {
+    const user = await userModel.findOne({ _id: req.userId });
+    res.status(201).json({ status: 201, user });
+  } catch (error) {
+    res.status(401).json({ status: 401, error });
+  }
+});
+
+// user logout
+
+router.get("/logout",authenticate,async(req,res)=>{
+  console.log(req.token);
+  try {
+    // req.rootUser.tokens=req.rootUser.tokens.filter((currelem)=>{
+    //   return currelem.token!==req.token
+    // })
+    req.rootUser.tokens.splice(0,req.rootUser.tokens.length)
+
+    res.clearCookie("usercookie",{path:'/'})
+
+    req.rootUser.save();
+
+    res.status(201).json({status:201})
+  } catch (error) {
+    res.status(401).json({status:401,error})
+  }
+})
 module.exports = router;

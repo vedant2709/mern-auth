@@ -1,10 +1,11 @@
 import { Button, TextField } from "@mui/material";
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
 function Login() {
+  const navigate=useNavigate();
   const [flag, setflag] = useState(false);
   const [passStatus, setPassStatus] = useState("show");
 
@@ -55,6 +56,7 @@ function Login() {
         localStorage.setItem("usertoken",res.result.token)
         toast.success("User logged in successfully")
         setInpVal({...inpval,email:"",password:""})
+        navigate("/dashboard")
       }
     }
   }
